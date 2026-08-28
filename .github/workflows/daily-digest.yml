@@ -1,0 +1,56 @@
+name: DeFi tracker daily run
+
+on:
+  schedule:
+    # 13:00 UTC daily — a fixed hour, read once, by design (see README).
+    - cron: "0 13 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: defi-tracker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore database
+        uses: actions/cache@v4
+        with:
+          path: defi-tracker/data
+          key: dft-db-${{ github.run_id }}
+          restore-keys: dft-db-
+
+      - name: Prepare config
+        run: |
+          mkdir -p config
+          cp config/config.example.toml config/config.toml
+
+      - name: Initialise DB (first run only)
+        run: |
+          test -f data/dft.db || python -m dft.cli init
+
+      - name: Run daily pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+        run: python -m dft.cli -v run
+
+      - name: Commit digest and database
+        run: |
+          git config user.name "dft-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add out/ data/dft.db
+          git diff --staged --quiet || git commit -m "Daily digest: $(date -u +%Y-%m-%d)"
+          git push

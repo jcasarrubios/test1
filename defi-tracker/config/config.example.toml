@@ -1,0 +1,191 @@
+# DeFi valuation tracker configuration.
+# Copy to config/config.toml and edit. Nothing here needs an API key except the
+# optional Claude classifier (ANTHROPIC_API_KEY) and the CoinGecko demo key
+# (COINGECKO_API_KEY) — everything else runs keyless.
+
+[core]
+db_path   = "data/dft.db"
+out_dir   = "out"
+benchmark = "BTC"          # outcome scoring is measured against this asset
+
+[http]
+user_agent      = "dft/0.1 (personal research tracker)"
+timeout_seconds = 20
+max_retries     = 3
+# Politeness delay between calls to the same host, seconds.
+min_interval     = { "api.llama.fi" = 0.2, "api.coingecko.com" = 0.7, "api.coinpaprika.com" = 0.3, "api.binance.com" = 0.2, "fapi.binance.com" = 0.2 }
+
+[screen]
+# Minimum annualised fees for a protocol to enter the multiples screen. Below
+# this the ratio is arithmetic noise.
+min_annualised_fees_usd = 2_000_000
+# Categories where DeFiLlama TVL is most prone to double-counting; flagged, not excluded.
+double_count_categories = ["Liquid Staking", "Restaking", "Liquid Restaking", "Bridge", "CDP", "Yield"]
+# Extra protocols to screen that have no token in [[assets]].
+protocols = ["lido", "jito-liquid-staking", "raydium-amm", "pancakeswap-amm"]
+
+[percentiles]
+lookback_days = 365   # trailing window for time-series percentile ranks
+min_obs       = 30    # below this, a percentile is reported as unavailable
+
+[signals]
+# Cross-sectional multiples: flag the cheapest/most expensive tails.
+ps_cheap_percentile     = 20    # P/S in the bottom fifth of its category
+ps_expensive_percentile = 90
+# Time-series flags: |percentile| of the trailing-year distribution.
+tvl_change_percentile   = 95
+funding_percentile      = 95    # crowding gauge — context, never a standalone signal
+stablecoin_percentile   = 90
+mcap_tvl_cheap          = 0.5
+
+[news]
+lookback_hours        = 36
+title_similarity      = 0.82   # SequenceMatcher ratio above which two headlines are one story
+surface_materiality   = 3      # only 3s reach the digest
+classify_batch_size   = 20
+model                 = "claude-opus-5"
+
+[[news.feeds]]
+name = "Cointelegraph"
+url  = "https://cointelegraph.com/rss"
+
+[[news.feeds]]
+name = "The Block"
+url  = "https://www.theblock.co/rss.xml"
+
+[[news.feeds]]
+name = "Decrypt"
+url  = "https://decrypt.co/feed"
+
+[[news.feeds]]
+name = "CoinDesk"
+url  = "https://www.coindesk.com/arc/outboundfeeds/rss/"
+
+[[news.feeds]]
+name = "The Defiant"
+url  = "https://thedefiant.io/api/feed"
+
+[[news.feeds]]
+name = "CryptoPanic"
+url  = "https://cryptopanic.com/news/rss/"
+
+# --- watchlist ---------------------------------------------------------------
+# `llama_slug` is the DeFiLlama protocol slug; leave it out for assets that are
+# not a protocol (BTC, ETH). Run `dft check-ids` to verify the external ids.
+
+[[assets]]
+symbol = "BTC"
+name = "Bitcoin"
+coingecko_id = "bitcoin"
+coinpaprika_id = "btc-bitcoin"
+binance_symbol = "BTCUSDT"
+binance_perp = "BTCUSDT"
+category = "Money"
+is_benchmark = true
+
+[[assets]]
+symbol = "ETH"
+name = "Ethereum"
+coingecko_id = "ethereum"
+coinpaprika_id = "eth-ethereum"
+binance_symbol = "ETHUSDT"
+binance_perp = "ETHUSDT"
+category = "L1"
+
+[[assets]]
+symbol = "SOL"
+name = "Solana"
+coingecko_id = "solana"
+coinpaprika_id = "sol-solana"
+binance_symbol = "SOLUSDT"
+binance_perp = "SOLUSDT"
+category = "L1"
+
+[[assets]]
+symbol = "AAVE"
+name = "Aave"
+coingecko_id = "aave"
+coinpaprika_id = "aave-new"
+llama_slug = "aave"
+binance_symbol = "AAVEUSDT"
+binance_perp = "AAVEUSDT"
+category = "Lending"
+
+[[assets]]
+symbol = "UNI"
+name = "Uniswap"
+coingecko_id = "uniswap"
+coinpaprika_id = "uni-uniswap"
+llama_slug = "uniswap"
+binance_symbol = "UNIUSDT"
+binance_perp = "UNIUSDT"
+category = "Dexes"
+
+[[assets]]
+symbol = "LDO"
+name = "Lido DAO"
+coingecko_id = "lido-dao"
+coinpaprika_id = "ldo-lido-dao"
+llama_slug = "lido"
+binance_symbol = "LDOUSDT"
+binance_perp = "LDOUSDT"
+category = "Liquid Staking"
+
+[[assets]]
+symbol = "CRV"
+name = "Curve DAO"
+coingecko_id = "curve-dao-token"
+coinpaprika_id = "crv-curve-dao-token"
+llama_slug = "curve-dex"
+binance_symbol = "CRVUSDT"
+binance_perp = "CRVUSDT"
+category = "Dexes"
+
+[[assets]]
+symbol = "PENDLE"
+name = "Pendle"
+coingecko_id = "pendle"
+coinpaprika_id = "pendle-pendle"
+llama_slug = "pendle"
+binance_symbol = "PENDLEUSDT"
+binance_perp = "PENDLEUSDT"
+category = "Yield"
+
+[[assets]]
+symbol = "GMX"
+name = "GMX"
+coingecko_id = "gmx"
+coinpaprika_id = "gmx-gmx"
+llama_slug = "gmx-v2-perps"
+binance_symbol = "GMXUSDT"
+binance_perp = "GMXUSDT"
+category = "Derivatives"
+
+[[assets]]
+symbol = "ENA"
+name = "Ethena"
+coingecko_id = "ethena"
+coinpaprika_id = "ena-ethena"
+llama_slug = "ethena-usde"
+binance_symbol = "ENAUSDT"
+binance_perp = "ENAUSDT"
+category = "Basis Trading"
+
+[[assets]]
+symbol = "JUP"
+name = "Jupiter"
+coingecko_id = "jupiter-exchange-solana"
+coinpaprika_id = "jup-jupiter"
+llama_slug = "jupiter-aggregator"
+binance_symbol = "JUPUSDT"
+binance_perp = "JUPUSDT"
+category = "Dexes"
+
+[[assets]]
+symbol = "SKY"
+name = "Sky (MakerDAO)"
+coingecko_id = "sky"
+coinpaprika_id = "sky-sky"
+llama_slug = "sky-lending"
+binance_symbol = "SKYUSDT"
+category = "CDP"

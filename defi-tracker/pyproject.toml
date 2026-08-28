@@ -1,0 +1,15 @@
+[project]
+name = "dft"
+version = "0.1.0"
+description = "DeFi valuation tracker: fundamentals-based multiples, percentile-ranked signals, and a filtered daily news digest."
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31",
+    "anthropic>=0.68",
+]
+
+[project.scripts]
+dft = "dft.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
