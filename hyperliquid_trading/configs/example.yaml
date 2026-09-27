@@ -1,0 +1,28 @@
+# hltrader run -c configs/example.yaml            (paper, testnet data)
+# hltrader run -c configs/example.yaml --mode live (orders on testnet; needs HL_PRIVATE_KEY)
+mode: paper          # paper | live
+network: testnet     # testnet | mainnet (mainnet also requires --i-understand-the-risks)
+paper_state_file: runs/paper_state.json
+
+strategy:
+  name: ema_cross
+  params:
+    fast: 12
+    slow: 48
+    allow_short: true
+
+runner:
+  coin: BTC
+  interval: 1h
+  leverage: 1.0        # target notional = signal * leverage * equity
+  stop_loss: 0.04      # 4% adverse move closes the position
+  take_profit: null
+  poll_seconds: 30
+  journal: runs/journal.jsonl
+
+risk:
+  max_leverage: 2.0
+  max_position_usd: 5000
+  max_daily_loss: 0.05
+  min_order_usd: 10
+  rebalance_tolerance: 0.05

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hltrader"
+version = "0.1.0"
+description = "Sistema para desarrollar, testear y ejecutar estrategias de trading en Hyperliquid"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "requests>=2.28",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+live = ["hyperliquid-python-sdk>=0.9", "eth-account>=0.10"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+hltrader = "hltrader.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["hltrader*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
